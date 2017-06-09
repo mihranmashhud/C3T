@@ -1,24 +1,25 @@
-var shape = new Array();
-
-var i = 0;
-for (var x = 0; x < 3; x++) {
-    shape[x] = new Array();
-    for (var y = 0; y < 3; y++) {
-        shape[x][y] = new Array();
-        for (var z = 0; z < 3; z++) {
-            shape[x][y][z] = new Array();
-            for (var w = 0; w < 3; w++) {
-                shape[x][y][z][w] = i;
-                i++;
+var array = new Array();
+for (var p = 0; p < 3; p++) {
+    array[p] = new Array(3);
+    var i = 0;
+    for (var x = 0; x < 3; x++) {
+        array[p][x] = new Array(3);
+        for (var y = 0; y < 3; y++) {
+            array[p][x][y] = new Array(3);
+            for (var z = 0; z < 3; z++) {
+                array[p][x][y][z] = new Array(3);
+                for (var w = 0; w < 3; w++) {
+                    array[p][x][y][z][w] = i;
+                    i++;
+                }
             }
         }
     }
 }
-var fill = shape;
-var stripe = shape;
+console.log(array.toString);
 var boardButtons = [];
 var gamePieces = [];
-var pieceFunctions = [];
+var properties = [];
 var vals;
 var undoButton;
 var pauseButton;
@@ -41,9 +42,15 @@ function movePiece(n1, n2) {
 }
 
 function enabled(option) {
-    for (var e = 0; e < boardButtons.length; e++) {
-        if (boardButtons[e].stayEnabled) {
-            boardButtons[e].inputEnabled = option;
+    for (var x = 0; x < 3; x++) {
+        for (var y = 0; y < 3; y++) {
+            for (var z = 0; z < 3; z++) {
+                for (var w = 0; w < 3; w++) {
+                    if (boardButtons[x][y][z][w].stayEnabled) {
+                        boardButtons[x][y][z][w].inputEnabled = option;
+                    }
+                }
+            }
         }
     }
 }
@@ -61,17 +68,25 @@ var playState = {
 
         //Make the Board
         var i = 0;
+        boardButtons = new Array(3);
         for (var x = 0; x < 3; x++) {
+            boardButtons[x] = new Array(3);
             for (var y = 0; y < 3; y++) {
+                boardButtons[x][y] = new Array(3);
                 for (var z = 0; z < 3; z++) {
+                    boardButtons[x][y][z] = new Array(3);
                     for (var w = 0; w < 3; w++) {
-                        boardButtons.push(game.add.button(332 + (z * 204) + (w * 64), 32 + (x * 204) + (y * 64), 'buttons', function () {
+                        boardButtons[x][y][z][w] = game.add.button(332 + (z * 204) + (w * 64), 32 + (x * 204) + (y * 64), 'buttons', function () {
+                            for (var g = 0; g < 3; g++) {
+                                array[g][this.x][this.y][this.z][this.w] = properties[g];
+                            }
                             vals = [this.x, this.y, this.z, this.w];
-                            console.log(vals);
+                            console.log("" + vals);
                             movePiece(332 + (this.z * 204) + (this.w * 64), 32 + (this.x * 204) + (this.y * 64));
-                            boardButtons[this.i].stayEnabled = false;
-                            boardButtons[this.i].inputEnabled = false;
-                            boardButtons[this.i].setFrames(6, 6, 6);
+                            boardButtons[this.x][this.y][this.z][this.w].stayEnabled = false;
+                            boardButtons[this.x][this.y][this.z][this.w].setFrames(6, 6, 6);
+                            winCheck(this.x, this.y, this.z, this.w);
+                            boardButtons[this.x][this.y][this.z][this.w].inputEnabled = false;
                             for (var w = 0; w < 27; w++) {
                                 var ease = game.add.tween(gamePieces[((inPlay.length % 2) * 27) + w]);
                                 ease.to({
@@ -79,16 +94,16 @@ var playState = {
                                 }, 1500, Phaser.Easing.Cubic.Out);
                                 ease.start();
                             }
+                            enabled(false);
                         }, {
                             x: x,
                             y: y,
                             z: z,
-                            w: w,
-                            i: i
-                        }, 7, 6, 8));
-                        boardButtons[i].anchor.setTo(0.5, 0.5);
-                        boardButtons[i].scale.setTo(64 / 150, 64 / 150);
-                        boardButtons[i].stayEnabled = true;
+                            w: w
+                        }, 7, 6, 8);
+                        boardButtons[x][y][z][w].anchor.setTo(0.5, 0.5);
+                        boardButtons[x][y][z][w].scale.setTo(64 / 150, 64 / 150);
+                        boardButtons[x][y][z][w].stayEnabled = true;
                         i++;
                     }
                 }
@@ -109,6 +124,8 @@ var playState = {
                     gamePieces[i].inputEnabled = true;
                     gamePieces[i].events.onInputDown.add(function () {
                         enabled(true);
+                        properties = [(this.x + 1) * 100, (this.y + 1) * 100, (this.z + 1) * 100];
+                        console.log(properties);
                         gamePieces[this.i].alpha = 0;
                         gamePieces[this.i].inputEnabled = false;
                         inPlay.push(game.add.sprite(num1[this.i] + 32, num2[this.i] + 32, 'pieces'));
@@ -129,7 +146,10 @@ var playState = {
                             ease.start();
                         }
                     }, {
-                        i: i
+                        i: i,
+                        x: x,
+                        y: y,
+                        z: z
                     });
                     i++;
                 }
@@ -144,6 +164,8 @@ var playState = {
                     gamePieces[i].inputEnabled = true;
                     gamePieces[i].events.onInputDown.add(function () {
                         enabled(true);
+                        properties = [(this.x + 4) * 100, (this.y + 4) * 100, (this.z + 4) * 100];
+                        console.log(properties);
                         gamePieces[this.i].alpha = 0;
                         gamePieces[this.i].inputEnabled = false;
                         inPlay.push(game.add.sprite(num1[this.i - num1.length] + 32, num2[this.i - num2.length] + 32, 'pieces'));
@@ -163,9 +185,11 @@ var playState = {
                             }, 1500, Phaser.Easing.Cubic.Out);
                             ease.start();
                         }
-
                     }, {
-                        i: i
+                        i: i,
+                        x: x,
+                        y: y,
+                        z: z
                     });
                     i++;
                 }
